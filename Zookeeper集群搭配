@@ -1,0 +1,36 @@
+解压
+tar -zxvf zookeeper3.4.14.tar.gz -C /usr/local
+
+vi zoo.cfg
+dataDir=/usr/local/zkdata
+在最后添加
+server.1=hdp1:2888:3888
+server.2=hdp2:2888:3888
+server.3=hdp3:2888:3888
+
+mkdir -p /usr/local/zkdata
+在zkdata目录里创建一个文件叫myid，里面写hdp1里写1     hdp2里写2  hdp3里写3
+echo 1 > myid
+
+启动
+bin/zkServer.sh start
+查看状态
+bin/zkServer.sh status
+命令行客户端
+bin/zkCli.sh 
+bin/zkCli.sh -server hdp1:2181,hdp2:2181,hdp3:2181
+
+
+ls 
+get 获取
+create /aa "hello world" 创建
+rmr /aa 删除
+
+zookeeper节点类型
+PERSISTENT 持久型，创建者就算和集群断开连接，数据也会保存
+EPHEMERAL 短暂型，创建者一旦和集群断开连接，zk就会删除节点
+创建短暂型节点  create -e /eee "hello"
+
+SEQUENTIAL 带序号的
+create -s /ccc 19  持久的带序号的
+create -e -s /ccc 19  短暂的带序号的
