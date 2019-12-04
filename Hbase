@@ -30,4 +30,9 @@ move ‘751ee31d06da510b99427e274cf15ff7’,‘hdp03,16020,1575370732872’
 merge_region ‘fd4a8398d8d2720769ae54a064f0c98c’,‘fa50d71caaf01b82056990de2963270c’
 删除
 delete ‘nds1:t1’,‘r1’,‘f1:name’
-
+创建5个版本的列族
+create 'nds1:yy',{NAME=>'f1',VERSIONS=>5}
+扫描列族下5个版本
+scan 'nds1:yy',{COLUMNS=>'f1',RWA=true,VERSIONS=>5}
+删除所有
+deleteall 'nds1:yy','r1'
