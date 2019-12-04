@@ -1,0 +1,50 @@
+前情提要 :
+记得点个赞你个小混蛋
+	1.HDFS中有300MB a.txt和80MB b.txt
+	2.写一个PV或者UV程序
+
+执行过程
+1.client(客户端)请求yarn的resourcemanager申请提交任务
+2.resourcemanager接受到请求返回给客户端		   jobID和hdfs提交地址 (hdfs://hdp1:8020/tmp../../staing/jobid)
+3.扫描输入路径的文件划分切片
+	3.1	
+	 		FileSplit0(对象) 0-128MB a.txt
+		    FileSplit1(对象) 128-256MB a.txt
+		    FileSplit2(对象) 256-300MB a.txt
+		    FileSplit3(对象) 0-80MB 
+	3.2
+	把上述对象add到list里将list序列化到文件里(job_id.split)
+	
+4.客户端上传刚刚生成的job.split和程序jar包到hadfs指定路径上
+5.客户端通知resourcemanager上传完成
+6.resourcemanager随机找个nodemanager启动MRAPPMaster
+7.MRAPPMaster下载job.split输入切片信息文件
+8.分析(反序列化)job.split文件,得出启动4个map,然后启动maptask
+9.下载程序执行jar包
+10.读取对应切片的信息(mapper1 读取File Split0 依次对应读取)一行一行读,调用LineRecordReader
+net一次读一行
+将行首偏移量设置为Key,将行的内容设置为Value
+返回给map(YarnChild)调用自己写的mapper类里的map方法输出 a1 a 1 b 1 b 1
+11.输出到环形数据缓冲区(内存)
+将上述输出内容写的环形数据缓冲区(也是内存)里
+环形缓冲区默认大小(100M)
+12.写入满80M(80%)时调用partitioner将数据进行分区
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20191013083622189.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDg1NjY2MA==,size_16,color_FFFFFF,t_70)
+13.会在分好的区里对key进行排序调用key的comparaTo方法
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20191013085221454.png)
+
+环形数据缓冲区剩下20%继续读取9步的输出内容写入满20%时检查第12步分区排序进行完成没有
+如果完成再继续覆盖60% 如果没有完成会阻塞
+以此.分区>排序>溢出到磁盘 形成若干个文件
+14.YarnChiId合并溢出文件 ,按照同区进行合并同时,在同区中进行排序生成分区索引文件
+
+划分切片有4个 启动4个map
+numReducerTask(分区3分)
+
+
+15.启动reducerTask下载程序执行jar包
+16.reducerTask0执行MRAPPMast的命令下载			   			14步文件0号区的数据()有3个分区 启动3个reducetask合并文件按key排序(SHUFFLE:混洗)
+17.启动自己写的Reducer类型进行聚合
+17.1 net一次 读一个key,value 把key,value赋值给reducer方法的key,v(一组k进入一次方法)每次net调用groupComparaTor(分组比较器):比较前后key是否一组不是一组进行切组进入下个reducer方法
+
+18.context.write到hdfs里面
