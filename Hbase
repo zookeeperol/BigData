@@ -1,0 +1,33 @@
+创建名称空间
+create_name ‘名称’
+展示名称空间
+list_namespace
+列出名称空间的所有表
+list_namespace_tables ‘hbase’
+创建表
+create ‘nds1:t1’, ‘f1’, ‘f2’
+添加数据
+put ‘nds1:t1’, ‘r1’, ‘f1:name’, ‘xxx’
+扫描
+scan ‘nds1:t1’
+查看列族
+get ‘nds1:t1’,‘r1’
+只显示本列族下的数据
+get ‘nds1:t1’,‘r1’,‘f2’
+查看细胞数据
+get ‘nds1:t1’,‘r1’,‘f1:age’
+
+scan ‘hbase:meta’
+
+切割
+split ‘nds1:t1,1575372719294.cfc64cbad967984632fc3f5de871cf73.’,‘r3’
+split ‘data01:t2’,‘r3000’
+再切一刀
+split ‘data01:t2,r3000,1575375921472.751ee31d06da510b99427e274cf15ff7.’,‘r6000’
+移动
+move ‘751ee31d06da510b99427e274cf15ff7’,‘hdp03,16020,1575370732872’
+合并俩个相邻的区域
+merge_region ‘fd4a8398d8d2720769ae54a064f0c98c’,‘fa50d71caaf01b82056990de2963270c’
+删除
+delete ‘nds1:t1’,‘r1’,‘f1:name’
+
